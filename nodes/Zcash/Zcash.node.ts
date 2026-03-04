@@ -1,249 +1,24 @@
-/*
- * Copyright (c) Velocity BPA, LLC
- * Licensed under the Business Source License 1.1
- * Commercial use requires a separate commercial license.
- * See LICENSE file for details.
+/**
+ * Copyright (c) 2026 Velocity BPA
+ * 
+ * Licensed under the Business Source License 1.1 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *     https://github.com/VelocityBPA/n8n-nodes-zcash/blob/main/LICENSE
+ * 
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
-import type {
+import {
   IExecuteFunctions,
   INodeExecutionData,
   INodeType,
   INodeTypeDescription,
+  NodeOperationError,
+  NodeApiError,
 } from 'n8n-workflow';
-
-import { createRpcClient, ZcashRpcClient } from './transport/rpcClient';
-import { LICENSING_NOTICE } from './constants/constants';
-
-// Wallet operations
-import * as walletOps from './actions/wallet/wallet.operations';
-// Transaction operations
-import * as transactionOps from './actions/transaction/transaction.operations';
-// Block operations
-import * as blockOps from './actions/block/block.operations';
-// Shielded operations
-import * as shieldedOps from './actions/shielded/shielded.operations';
-// Keys operations
-import * as keysOps from './actions/keys/keys.operations';
-// Mining operations
-import * as miningOps from './actions/mining/mining.operations';
-// Network operations
-import * as networkOps from './actions/network/network.operations';
-// Utility operations
-import * as utilityOps from './actions/utility/utility.operations';
-
-// Log licensing notice once on module load
-let licensingLogged = false;
-function logLicensingNotice(): void {
-  if (!licensingLogged) {
-    console.warn(LICENSING_NOTICE);
-    licensingLogged = true;
-  }
-}
-
-async function executeWalletOperation(
-  context: IExecuteFunctions,
-  client: ZcashRpcClient,
-  operation: string,
-  itemIndex: number,
-): Promise<INodeExecutionData[]> {
-  switch (operation) {
-    case 'getBalance':
-      return walletOps.getBalance(context, client, itemIndex);
-    case 'getNewAddress':
-      return walletOps.getNewAddress(context, client, itemIndex);
-    case 'listAddresses':
-      return walletOps.listAddresses(context, client, itemIndex);
-    case 'listTransactions':
-      return walletOps.listTransactions(context, client, itemIndex);
-    case 'sendToAddress':
-      return walletOps.sendToAddress(context, client, itemIndex);
-    case 'validateAddress':
-      return walletOps.validateAddress(context, client, itemIndex);
-    case 'getWalletInfo':
-      return walletOps.getWalletInfo(context, client, itemIndex);
-    case 'backupWallet':
-      return walletOps.backupWallet(context, client, itemIndex);
-    default:
-      throw new Error(`Unknown wallet operation: ${operation}`);
-  }
-}
-
-async function executeTransactionOperation(
-  context: IExecuteFunctions,
-  client: ZcashRpcClient,
-  operation: string,
-  itemIndex: number,
-): Promise<INodeExecutionData[]> {
-  switch (operation) {
-    case 'getTransaction':
-      return transactionOps.getTransaction(context, client, itemIndex);
-    case 'getRawTransaction':
-      return transactionOps.getRawTransaction(context, client, itemIndex);
-    case 'sendRawTransaction':
-      return transactionOps.sendRawTransaction(context, client, itemIndex);
-    case 'decodeRawTransaction':
-      return transactionOps.decodeRawTransaction(context, client, itemIndex);
-    case 'createRawTransaction':
-      return transactionOps.createRawTransaction(context, client, itemIndex);
-    case 'signRawTransaction':
-      return transactionOps.signRawTransaction(context, client, itemIndex);
-    case 'listUnspent':
-      return transactionOps.listUnspent(context, client, itemIndex);
-    default:
-      throw new Error(`Unknown transaction operation: ${operation}`);
-  }
-}
-
-async function executeBlockOperation(
-  context: IExecuteFunctions,
-  client: ZcashRpcClient,
-  operation: string,
-  itemIndex: number,
-): Promise<INodeExecutionData[]> {
-  switch (operation) {
-    case 'getBlock':
-      return blockOps.getBlock(context, client, itemIndex);
-    case 'getBlockCount':
-      return blockOps.getBlockCount(context, client, itemIndex);
-    case 'getBlockHash':
-      return blockOps.getBlockHash(context, client, itemIndex);
-    case 'getBestBlockHash':
-      return blockOps.getBestBlockHash(context, client, itemIndex);
-    case 'getBlockHeader':
-      return blockOps.getBlockHeader(context, client, itemIndex);
-    case 'getBlockchainInfo':
-      return blockOps.getBlockchainInfo(context, client, itemIndex);
-    case 'getDifficulty':
-      return blockOps.getDifficulty(context, client, itemIndex);
-    default:
-      throw new Error(`Unknown block operation: ${operation}`);
-  }
-}
-
-async function executeShieldedOperation(
-  context: IExecuteFunctions,
-  client: ZcashRpcClient,
-  operation: string,
-  itemIndex: number,
-): Promise<INodeExecutionData[]> {
-  switch (operation) {
-    case 'zGetBalance':
-      return shieldedOps.zGetBalance(context, client, itemIndex);
-    case 'zGetNewAddress':
-      return shieldedOps.zGetNewAddress(context, client, itemIndex);
-    case 'zListAddresses':
-      return shieldedOps.zListAddresses(context, client, itemIndex);
-    case 'zSendMany':
-      return shieldedOps.zSendMany(context, client, itemIndex);
-    case 'zGetOperationStatus':
-      return shieldedOps.zGetOperationStatus(context, client, itemIndex);
-    case 'zGetOperationResult':
-      return shieldedOps.zGetOperationResult(context, client, itemIndex);
-    case 'zListOperations':
-      return shieldedOps.zListOperations(context, client, itemIndex);
-    case 'zViewTransaction':
-      return shieldedOps.zViewTransaction(context, client, itemIndex);
-    case 'zGetTotalBalance':
-      return shieldedOps.zGetTotalBalance(context, client, itemIndex);
-    default:
-      throw new Error(`Unknown shielded operation: ${operation}`);
-  }
-}
-
-async function executeKeysOperation(
-  context: IExecuteFunctions,
-  client: ZcashRpcClient,
-  operation: string,
-  itemIndex: number,
-): Promise<INodeExecutionData[]> {
-  switch (operation) {
-    case 'exportViewingKey':
-      return keysOps.exportViewingKey(context, client, itemIndex);
-    case 'importViewingKey':
-      return keysOps.importViewingKey(context, client, itemIndex);
-    case 'exportSpendingKey':
-      return keysOps.exportSpendingKey(context, client, itemIndex);
-    case 'importSpendingKey':
-      return keysOps.importSpendingKey(context, client, itemIndex);
-    case 'zExportKey':
-      return keysOps.zExportKey(context, client, itemIndex);
-    case 'zImportKey':
-      return keysOps.zImportKey(context, client, itemIndex);
-    default:
-      throw new Error(`Unknown keys operation: ${operation}`);
-  }
-}
-
-async function executeMiningOperation(
-  context: IExecuteFunctions,
-  client: ZcashRpcClient,
-  operation: string,
-  itemIndex: number,
-): Promise<INodeExecutionData[]> {
-  switch (operation) {
-    case 'getMiningInfo':
-      return miningOps.getMiningInfo(context, client, itemIndex);
-    case 'getNetworkHashrate':
-      return miningOps.getNetworkHashrate(context, client, itemIndex);
-    case 'getBlockTemplate':
-      return miningOps.getBlockTemplate(context, client, itemIndex);
-    case 'submitBlock':
-      return miningOps.submitBlock(context, client, itemIndex);
-    case 'getNetworkSolPs':
-      return miningOps.getNetworkSolPs(context, client, itemIndex);
-    default:
-      throw new Error(`Unknown mining operation: ${operation}`);
-  }
-}
-
-async function executeNetworkOperation(
-  context: IExecuteFunctions,
-  client: ZcashRpcClient,
-  operation: string,
-  itemIndex: number,
-): Promise<INodeExecutionData[]> {
-  switch (operation) {
-    case 'getNetworkInfo':
-      return networkOps.getNetworkInfo(context, client, itemIndex);
-    case 'getPeerInfo':
-      return networkOps.getPeerInfo(context, client, itemIndex);
-    case 'getConnectionCount':
-      return networkOps.getConnectionCount(context, client, itemIndex);
-    case 'addNode':
-      return networkOps.addNode(context, client, itemIndex);
-    case 'getAddedNodeInfo':
-      return networkOps.getAddedNodeInfo(context, client, itemIndex);
-    case 'disconnectNode':
-      return networkOps.disconnectNode(context, client, itemIndex);
-    default:
-      throw new Error(`Unknown network operation: ${operation}`);
-  }
-}
-
-async function executeUtilityOperation(
-  context: IExecuteFunctions,
-  client: ZcashRpcClient,
-  operation: string,
-  itemIndex: number,
-): Promise<INodeExecutionData[]> {
-  switch (operation) {
-    case 'estimateFee':
-      return utilityOps.estimateFee(context, client, itemIndex);
-    case 'signMessage':
-      return utilityOps.signMessage(context, client, itemIndex);
-    case 'verifyMessage':
-      return utilityOps.verifyMessage(context, client, itemIndex);
-    case 'getInfo':
-      return utilityOps.getInfo(context, client, itemIndex);
-    case 'help':
-      return utilityOps.help(context, client, itemIndex);
-    case 'stop':
-      return utilityOps.stop(context, client, itemIndex);
-    default:
-      throw new Error(`Unknown utility operation: ${operation}`);
-  }
-}
 
 export class Zcash implements INodeType {
   description: INodeTypeDescription = {
@@ -253,7 +28,7 @@ export class Zcash implements INodeType {
     group: ['transform'],
     version: 1,
     subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
-    description: 'Interact with Zcash blockchain via RPC',
+    description: 'Interact with the Zcash API',
     defaults: {
       name: 'Zcash',
     },
@@ -261,782 +36,1926 @@ export class Zcash implements INodeType {
     outputs: ['main'],
     credentials: [
       {
-        name: 'zcashRpcApi',
+        name: 'zcashApi',
         required: true,
       },
     ],
     properties: [
+      // Resource selector
       {
         displayName: 'Resource',
         name: 'resource',
         type: 'options',
         noDataExpression: true,
         options: [
-          { name: 'Wallet', value: 'wallet' },
-          { name: 'Transaction', value: 'transaction' },
-          { name: 'Block', value: 'block' },
-          { name: 'Shielded', value: 'shielded' },
-          { name: 'Keys', value: 'keys' },
-          { name: 'Mining', value: 'mining' },
-          { name: 'Network', value: 'network' },
-          { name: 'Utility', value: 'utility' },
+          {
+            name: 'Wallet',
+            value: 'wallet',
+          },
+          {
+            name: 'ShieldedOperations',
+            value: 'shieldedOperations',
+          },
+          {
+            name: 'Transactions',
+            value: 'transactions',
+          },
+          {
+            name: 'Blockchain',
+            value: 'blockchain',
+          },
+          {
+            name: 'Mining',
+            value: 'mining',
+          }
         ],
         default: 'wallet',
       },
-
-      // ==================== WALLET OPERATIONS ====================
-      {
-        displayName: 'Operation',
-        name: 'operation',
-        type: 'options',
-        noDataExpression: true,
-        displayOptions: { show: { resource: ['wallet'] } },
-        options: [
-          { name: 'Get Balance', value: 'getBalance', description: 'Get wallet balance', action: 'Get wallet balance' },
-          { name: 'Get New Address', value: 'getNewAddress', description: 'Generate a new address', action: 'Generate new address' },
-          { name: 'List Addresses', value: 'listAddresses', description: 'List all addresses', action: 'List addresses' },
-          { name: 'List Transactions', value: 'listTransactions', description: 'List transactions', action: 'List transactions' },
-          { name: 'Send To Address', value: 'sendToAddress', description: 'Send ZEC to an address', action: 'Send ZEC' },
-          { name: 'Validate Address', value: 'validateAddress', description: 'Validate an address', action: 'Validate address' },
-          { name: 'Get Wallet Info', value: 'getWalletInfo', description: 'Get wallet information', action: 'Get wallet info' },
-          { name: 'Backup Wallet', value: 'backupWallet', description: 'Backup wallet to file', action: 'Backup wallet' },
-        ],
-        default: 'getBalance',
-      },
-
-      // ==================== TRANSACTION OPERATIONS ====================
-      {
-        displayName: 'Operation',
-        name: 'operation',
-        type: 'options',
-        noDataExpression: true,
-        displayOptions: { show: { resource: ['transaction'] } },
-        options: [
-          { name: 'Get Transaction', value: 'getTransaction', description: 'Get transaction details', action: 'Get transaction' },
-          { name: 'Get Raw Transaction', value: 'getRawTransaction', description: 'Get raw transaction data', action: 'Get raw transaction' },
-          { name: 'Send Raw Transaction', value: 'sendRawTransaction', description: 'Broadcast raw transaction', action: 'Send raw transaction' },
-          { name: 'Decode Raw Transaction', value: 'decodeRawTransaction', description: 'Decode raw transaction', action: 'Decode raw transaction' },
-          { name: 'Create Raw Transaction', value: 'createRawTransaction', description: 'Create raw transaction', action: 'Create raw transaction' },
-          { name: 'Sign Raw Transaction', value: 'signRawTransaction', description: 'Sign raw transaction', action: 'Sign raw transaction' },
-          { name: 'List Unspent', value: 'listUnspent', description: 'List unspent outputs', action: 'List unspent' },
-        ],
-        default: 'getTransaction',
-      },
-
-      // ==================== BLOCK OPERATIONS ====================
-      {
-        displayName: 'Operation',
-        name: 'operation',
-        type: 'options',
-        noDataExpression: true,
-        displayOptions: { show: { resource: ['block'] } },
-        options: [
-          { name: 'Get Block', value: 'getBlock', description: 'Get block by hash', action: 'Get block' },
-          { name: 'Get Block Count', value: 'getBlockCount', description: 'Get current block height', action: 'Get block count' },
-          { name: 'Get Block Hash', value: 'getBlockHash', description: 'Get block hash by height', action: 'Get block hash' },
-          { name: 'Get Best Block Hash', value: 'getBestBlockHash', description: 'Get latest block hash', action: 'Get best block hash' },
-          { name: 'Get Block Header', value: 'getBlockHeader', description: 'Get block header', action: 'Get block header' },
-          { name: 'Get Blockchain Info', value: 'getBlockchainInfo', description: 'Get blockchain info', action: 'Get blockchain info' },
-          { name: 'Get Difficulty', value: 'getDifficulty', description: 'Get mining difficulty', action: 'Get difficulty' },
-        ],
-        default: 'getBlockCount',
-      },
-
-      // ==================== SHIELDED OPERATIONS ====================
-      {
-        displayName: 'Operation',
-        name: 'operation',
-        type: 'options',
-        noDataExpression: true,
-        displayOptions: { show: { resource: ['shielded'] } },
-        options: [
-          { name: 'Z Get Balance', value: 'zGetBalance', description: 'Get shielded balance', action: 'Get shielded balance' },
-          { name: 'Z Get New Address', value: 'zGetNewAddress', description: 'Generate shielded address', action: 'Get new shielded address' },
-          { name: 'Z List Addresses', value: 'zListAddresses', description: 'List shielded addresses', action: 'List shielded addresses' },
-          { name: 'Z Send Many', value: 'zSendMany', description: 'Send shielded transaction', action: 'Send shielded transaction' },
-          { name: 'Z Get Operation Status', value: 'zGetOperationStatus', description: 'Check operation status', action: 'Get operation status' },
-          { name: 'Z Get Operation Result', value: 'zGetOperationResult', description: 'Get operation result', action: 'Get operation result' },
-          { name: 'Z List Operations', value: 'zListOperations', description: 'List operations', action: 'List operations' },
-          { name: 'Z View Transaction', value: 'zViewTransaction', description: 'View transaction details', action: 'View transaction' },
-          { name: 'Z Get Total Balance', value: 'zGetTotalBalance', description: 'Get total balance', action: 'Get total balance' },
-        ],
-        default: 'zGetBalance',
-      },
-
-      // ==================== KEYS OPERATIONS ====================
-      {
-        displayName: 'Operation',
-        name: 'operation',
-        type: 'options',
-        noDataExpression: true,
-        displayOptions: { show: { resource: ['keys'] } },
-        options: [
-          { name: 'Export Viewing Key', value: 'exportViewingKey', description: 'Export viewing key', action: 'Export viewing key' },
-          { name: 'Import Viewing Key', value: 'importViewingKey', description: 'Import viewing key', action: 'Import viewing key' },
-          { name: 'Export Spending Key', value: 'exportSpendingKey', description: 'Export spending key', action: 'Export spending key' },
-          { name: 'Import Spending Key', value: 'importSpendingKey', description: 'Import spending key', action: 'Import spending key' },
-          { name: 'Z Export Key', value: 'zExportKey', description: 'Export z-address key', action: 'Export z-address key' },
-          { name: 'Z Import Key', value: 'zImportKey', description: 'Import z-address key', action: 'Import z-address key' },
-        ],
-        default: 'exportViewingKey',
-      },
-
-      // ==================== MINING OPERATIONS ====================
-      {
-        displayName: 'Operation',
-        name: 'operation',
-        type: 'options',
-        noDataExpression: true,
-        displayOptions: { show: { resource: ['mining'] } },
-        options: [
-          { name: 'Get Mining Info', value: 'getMiningInfo', description: 'Get mining information', action: 'Get mining info' },
-          { name: 'Get Network Hashrate', value: 'getNetworkHashrate', description: 'Get network hashrate', action: 'Get network hashrate' },
-          { name: 'Get Block Template', value: 'getBlockTemplate', description: 'Get block template', action: 'Get block template' },
-          { name: 'Submit Block', value: 'submitBlock', description: 'Submit mined block', action: 'Submit block' },
-          { name: 'Get Network Sol/s', value: 'getNetworkSolPs', description: 'Get network solutions/second', action: 'Get network sol/s' },
-        ],
-        default: 'getMiningInfo',
-      },
-
-      // ==================== NETWORK OPERATIONS ====================
-      {
-        displayName: 'Operation',
-        name: 'operation',
-        type: 'options',
-        noDataExpression: true,
-        displayOptions: { show: { resource: ['network'] } },
-        options: [
-          { name: 'Get Network Info', value: 'getNetworkInfo', description: 'Get network information', action: 'Get network info' },
-          { name: 'Get Peer Info', value: 'getPeerInfo', description: 'Get connected peers', action: 'Get peer info' },
-          { name: 'Get Connection Count', value: 'getConnectionCount', description: 'Get connection count', action: 'Get connection count' },
-          { name: 'Add Node', value: 'addNode', description: 'Add a peer node', action: 'Add node' },
-          { name: 'Get Added Node Info', value: 'getAddedNodeInfo', description: 'Get added node info', action: 'Get added node info' },
-          { name: 'Disconnect Node', value: 'disconnectNode', description: 'Disconnect a peer', action: 'Disconnect node' },
-        ],
-        default: 'getNetworkInfo',
-      },
-
-      // ==================== UTILITY OPERATIONS ====================
-      {
-        displayName: 'Operation',
-        name: 'operation',
-        type: 'options',
-        noDataExpression: true,
-        displayOptions: { show: { resource: ['utility'] } },
-        options: [
-          { name: 'Estimate Fee', value: 'estimateFee', description: 'Estimate transaction fee', action: 'Estimate fee' },
-          { name: 'Sign Message', value: 'signMessage', description: 'Sign a message', action: 'Sign message' },
-          { name: 'Verify Message', value: 'verifyMessage', description: 'Verify signed message', action: 'Verify message' },
-          { name: 'Get Info', value: 'getInfo', description: 'Get node info', action: 'Get info' },
-          { name: 'Help', value: 'help', description: 'Get RPC help', action: 'Get help' },
-          { name: 'Stop', value: 'stop', description: 'Stop zcashd', action: 'Stop node' },
-        ],
-        default: 'getInfo',
-      },
-
-      // ==================== PARAMETERS ====================
-
-      // Address parameter (used by multiple operations)
-      {
-        displayName: 'Address',
-        name: 'address',
-        type: 'string',
-        default: '',
-        required: true,
-        displayOptions: {
-          show: {
-            operation: [
-              'sendToAddress', 'validateAddress', 'zGetBalance',
-              'exportViewingKey', 'exportSpendingKey', 'zExportKey',
-              'signMessage', 'verifyMessage',
-            ],
-          },
-        },
-        description: 'Zcash address',
-      },
-
-      // Amount parameter
-      {
-        displayName: 'Amount',
-        name: 'amount',
-        type: 'number',
-        default: 0,
-        required: true,
-        typeOptions: { minValue: 0, numberPrecision: 8 },
-        displayOptions: {
-          show: { operation: ['sendToAddress', 'zSendMany'] },
-        },
-        description: 'Amount in ZEC',
-      },
-
-      // Transaction ID parameter
-      {
-        displayName: 'Transaction ID',
-        name: 'txid',
-        type: 'string',
-        default: '',
-        required: true,
-        displayOptions: {
-          show: { operation: ['getTransaction', 'getRawTransaction', 'zViewTransaction'] },
-        },
-        description: 'Transaction hash',
-      },
-
-      // Block hash parameter
-      {
-        displayName: 'Block Hash',
-        name: 'blockHash',
-        type: 'string',
-        default: '',
-        required: true,
-        displayOptions: {
-          show: { operation: ['getBlock', 'getBlockHeader'] },
-        },
-        description: 'Block hash',
-      },
-
-      // Block height parameter
-      {
-        displayName: 'Block Height',
-        name: 'height',
-        type: 'number',
-        default: 0,
-        required: true,
-        displayOptions: {
-          show: { operation: ['getBlockHash'] },
-        },
-        description: 'Block height',
-      },
-
-      // Hex string parameter (for raw transactions)
-      {
-        displayName: 'Hex String',
-        name: 'hexString',
-        type: 'string',
-        default: '',
-        required: true,
-        displayOptions: {
-          show: { operation: ['sendRawTransaction', 'decodeRawTransaction', 'signRawTransaction'] },
-        },
-        description: 'Raw transaction hex',
-      },
-
-      // Shielded address type
-      {
-        displayName: 'Address Type',
-        name: 'addressType',
-        type: 'options',
-        options: [
-          { name: 'Sapling', value: 'sapling' },
-          { name: 'Unified', value: 'p2pkh' },
-        ],
-        default: 'sapling',
-        displayOptions: {
-          show: { operation: ['zGetNewAddress', 'getNewAddress'] },
-        },
-        description: 'Type of address to generate',
-      },
-
-      // From address for z_sendmany
-      {
-        displayName: 'From Address',
-        name: 'fromAddress',
-        type: 'string',
-        default: '',
-        required: true,
-        displayOptions: {
-          show: { operation: ['zSendMany'] },
-        },
-        description: 'Source address',
-      },
-
-      // To address for z_sendmany
-      {
-        displayName: 'To Address',
-        name: 'toAddress',
-        type: 'string',
-        default: '',
-        required: true,
-        displayOptions: {
-          show: { operation: ['zSendMany'] },
-        },
-        description: 'Destination address',
-      },
-
-      // Memo for shielded transactions
-      {
-        displayName: 'Memo',
-        name: 'memo',
-        type: 'string',
-        default: '',
-        displayOptions: {
-          show: { operation: ['zSendMany'] },
-        },
-        description: 'Optional memo (max 512 bytes)',
-      },
-
-      // Operation ID parameter
-      {
-        displayName: 'Operation ID',
-        name: 'operationId',
-        type: 'string',
-        default: '',
-        displayOptions: {
-          show: { operation: ['zGetOperationStatus', 'zGetOperationResult'] },
-        },
-        description: 'Operation ID to check',
-      },
-
-      // Viewing/Spending key parameters
-      {
-        displayName: 'Viewing Key',
-        name: 'viewingKey',
-        type: 'string',
-        default: '',
-        required: true,
-        displayOptions: {
-          show: { operation: ['importViewingKey'] },
-        },
-        description: 'Viewing key to import',
-      },
-
-      {
-        displayName: 'Spending Key',
-        name: 'spendingKey',
-        type: 'string',
-        default: '',
-        required: true,
-        displayOptions: {
-          show: { operation: ['importSpendingKey'] },
-        },
-        description: 'Spending key to import',
-      },
-
-      {
-        displayName: 'Key',
-        name: 'key',
-        type: 'string',
-        default: '',
-        required: true,
-        displayOptions: {
-          show: { operation: ['zImportKey'] },
-        },
-        description: 'Key to import',
-      },
-
-      // Rescan option
-      {
-        displayName: 'Rescan',
-        name: 'rescan',
-        type: 'options',
-        options: [
-          { name: 'When Key Is New', value: 'whenkeyisnew' },
-          { name: 'Yes', value: 'yes' },
-          { name: 'No', value: 'no' },
-        ],
-        default: 'whenkeyisnew',
-        displayOptions: {
-          show: { operation: ['importViewingKey', 'importSpendingKey', 'zImportKey'] },
-        },
-        description: 'Whether to rescan the blockchain',
-      },
-
-      // Start height for key import
-      {
-        displayName: 'Start Height',
-        name: 'startHeight',
-        type: 'number',
-        default: 0,
-        displayOptions: {
-          show: { operation: ['importViewingKey', 'importSpendingKey', 'zImportKey'] },
-        },
-        description: 'Block height to start rescanning from',
-      },
-
-      // Min confirmations
-      {
-        displayName: 'Minimum Confirmations',
-        name: 'minConfirmations',
-        type: 'number',
-        default: 1,
-        displayOptions: {
-          show: {
-            operation: [
-              'getBalance', 'zGetBalance', 'zSendMany', 'zGetTotalBalance', 'listUnspent',
-            ],
-          },
-        },
-        description: 'Minimum confirmations required',
-      },
-
-      // Max confirmations for listUnspent
-      {
-        displayName: 'Maximum Confirmations',
-        name: 'maxConfirmations',
-        type: 'number',
-        default: 9999999,
-        displayOptions: {
-          show: { operation: ['listUnspent'] },
-        },
-        description: 'Maximum confirmations',
-      },
-
-      // Include watch only
-      {
-        displayName: 'Include Watch Only',
-        name: 'includeWatchOnly',
-        type: 'boolean',
-        default: false,
-        displayOptions: {
-          show: {
-            operation: [
-              'getBalance', 'listTransactions', 'getTransaction',
-              'zListAddresses', 'zGetTotalBalance',
-            ],
-          },
-        },
-        description: 'Whether to include watch-only addresses',
-      },
-
-      // Count for listTransactions
-      {
-        displayName: 'Count',
-        name: 'count',
-        type: 'number',
-        default: 10,
-        displayOptions: {
-          show: { operation: ['listTransactions'] },
-        },
-        description: 'Number of transactions to return',
-      },
-
-      // Skip for listTransactions
-      {
-        displayName: 'Skip',
-        name: 'skip',
-        type: 'number',
-        default: 0,
-        displayOptions: {
-          show: { operation: ['listTransactions'] },
-        },
-        description: 'Number of transactions to skip',
-      },
-
-      // Fee parameter
-      {
-        displayName: 'Fee',
-        name: 'fee',
-        type: 'number',
-        default: 0.0001,
-        typeOptions: { minValue: 0, numberPrecision: 8 },
-        displayOptions: {
-          show: { operation: ['zSendMany'] },
-        },
-        description: 'Transaction fee in ZEC',
-      },
-
-      // Verbose parameter
-      {
-        displayName: 'Verbose',
-        name: 'verbose',
-        type: 'boolean',
-        default: true,
-        displayOptions: {
-          show: { operation: ['getRawTransaction', 'getBlockHeader'] },
-        },
-        description: 'Whether to return detailed information',
-      },
-
-      // Verbosity for getBlock
-      {
-        displayName: 'Verbosity',
-        name: 'verbosity',
-        type: 'options',
-        options: [
-          { name: 'Hex Only', value: 0 },
-          { name: 'JSON Object', value: 1 },
-          { name: 'JSON With Transactions', value: 2 },
-        ],
-        default: 1,
-        displayOptions: {
-          show: { operation: ['getBlock'] },
-        },
-        description: 'Level of detail to return',
-      },
-
-      // Comment parameters for sendToAddress
-      {
-        displayName: 'Comment',
-        name: 'comment',
-        type: 'string',
-        default: '',
-        displayOptions: {
-          show: { operation: ['sendToAddress'] },
-        },
-        description: 'Comment for the transaction',
-      },
-
-      {
-        displayName: 'Comment To',
-        name: 'commentTo',
-        type: 'string',
-        default: '',
-        displayOptions: {
-          show: { operation: ['sendToAddress'] },
-        },
-        description: 'Comment about the recipient',
-      },
-
-      // Backup destination
-      {
-        displayName: 'Destination',
-        name: 'destination',
-        type: 'string',
-        default: '',
-        required: true,
-        displayOptions: {
-          show: { operation: ['backupWallet'] },
-        },
-        description: 'Path to save wallet backup',
-      },
-
-      // Raw transaction inputs/outputs
-      {
-        displayName: 'Inputs (JSON)',
-        name: 'inputs',
-        type: 'string',
-        default: '[]',
-        required: true,
-        displayOptions: {
-          show: { operation: ['createRawTransaction'] },
-        },
-        description: 'JSON array of inputs',
-      },
-
-      {
-        displayName: 'Outputs (JSON)',
-        name: 'outputs',
-        type: 'string',
-        default: '{}',
-        required: true,
-        displayOptions: {
-          show: { operation: ['createRawTransaction'] },
-        },
-        description: 'JSON object of outputs',
-      },
-
-      {
-        displayName: 'Locktime',
-        name: 'locktime',
-        type: 'number',
-        default: 0,
-        displayOptions: {
-          show: { operation: ['createRawTransaction'] },
-        },
-        description: 'Transaction locktime',
-      },
-
-      // Addresses for listUnspent
-      {
-        displayName: 'Addresses',
-        name: 'addresses',
-        type: 'string',
-        default: '',
-        displayOptions: {
-          show: { operation: ['listUnspent'] },
-        },
-        description: 'Comma-separated addresses to filter',
-      },
-
-      // Allow high fees
-      {
-        displayName: 'Allow High Fees',
-        name: 'allowHighFees',
-        type: 'boolean',
-        default: false,
-        displayOptions: {
-          show: { operation: ['sendRawTransaction'] },
-        },
-        description: 'Whether to allow high fees',
-      },
-
-      // Mining parameters
-      {
-        displayName: 'Blocks',
-        name: 'blocks',
-        type: 'number',
-        default: 120,
-        displayOptions: {
-          show: { operation: ['getNetworkHashrate', 'getNetworkSolPs'] },
-        },
-        description: 'Number of blocks to average',
-      },
-
-      {
-        displayName: 'Height',
-        name: 'height',
-        type: 'number',
-        default: -1,
-        displayOptions: {
-          show: { operation: ['getNetworkHashrate', 'getNetworkSolPs'] },
-        },
-        description: 'Block height (-1 for latest)',
-      },
-
-      {
-        displayName: 'Hex Data',
-        name: 'hexData',
-        type: 'string',
-        default: '',
-        required: true,
-        displayOptions: {
-          show: { operation: ['submitBlock'] },
-        },
-        description: 'Block data in hex',
-      },
-
-      // Network parameters
-      {
-        displayName: 'Node',
-        name: 'node',
-        type: 'string',
-        default: '',
-        required: true,
-        displayOptions: {
-          show: { operation: ['addNode', 'disconnectNode'] },
-        },
-        description: 'Node address (ip:port)',
-      },
-
-      {
-        displayName: 'Command',
-        name: 'command',
-        type: 'options',
-        options: [
-          { name: 'Add', value: 'add' },
-          { name: 'Remove', value: 'remove' },
-          { name: 'One Try', value: 'onetry' },
-        ],
-        default: 'add',
-        displayOptions: {
-          show: { operation: ['addNode'] },
-        },
-        description: 'Action to perform',
-      },
-
-      {
-        displayName: 'DNS',
-        name: 'dns',
-        type: 'boolean',
-        default: true,
-        displayOptions: {
-          show: { operation: ['getAddedNodeInfo'] },
-        },
-        description: 'Whether to include DNS info',
-      },
-
-      // Utility parameters
-      {
-        displayName: 'Number of Blocks',
-        name: 'numBlocks',
-        type: 'number',
-        default: 6,
-        displayOptions: {
-          show: { operation: ['estimateFee'] },
-        },
-        description: 'Number of blocks for fee estimate',
-      },
-
-      {
-        displayName: 'Message',
-        name: 'message',
-        type: 'string',
-        default: '',
-        required: true,
-        displayOptions: {
-          show: { operation: ['signMessage', 'verifyMessage'] },
-        },
-        description: 'Message to sign or verify',
-      },
-
-      {
-        displayName: 'Signature',
-        name: 'signature',
-        type: 'string',
-        default: '',
-        required: true,
-        displayOptions: {
-          show: { operation: ['verifyMessage'] },
-        },
-        description: 'Signature to verify',
-      },
-
-      {
-        displayName: 'Help Command',
-        name: 'helpCommand',
-        type: 'string',
-        default: '',
-        displayOptions: {
-          show: { operation: ['help'] },
-        },
-        description: 'RPC command to get help for',
-      },
+      // Operation dropdowns per resource
+{
+  displayName: 'Operation',
+  name: 'operation',
+  type: 'options',
+  noDataExpression: true,
+  displayOptions: {
+    show: {
+      resource: ['wallet'],
+    },
+  },
+  options: [
+    {
+      name: 'Get Balance',
+      value: 'getBalance',
+      description: 'Get total wallet balance',
+      action: 'Get wallet balance',
+    },
+    {
+      name: 'Get New Address',
+      value: 'getNewAddress',
+      description: 'Generate new transparent address',
+      action: 'Generate new address',
+    },
+    {
+      name: 'Get Addresses by Account',
+      value: 'getAddressesByAccount',
+      description: 'List addresses by account',
+      action: 'List addresses by account',
+    },
+    {
+      name: 'List Addresses',
+      value: 'listAddresses',
+      description: 'List all wallet addresses',
+      action: 'List all addresses',
+    },
+    {
+      name: 'Backup Wallet',
+      value: 'backupWallet',
+      description: 'Backup wallet to file',
+      action: 'Backup wallet',
+    },
+    {
+      name: 'Encrypt Wallet',
+      value: 'encryptWallet',
+      description: 'Encrypt wallet with passphrase',
+      action: 'Encrypt wallet',
+    },
+    {
+      name: 'Wallet Passphrase',
+      value: 'walletPassphrase',
+      description: 'Unlock wallet for operations',
+      action: 'Unlock wallet',
+    },
+  ],
+  default: 'getBalance',
+},
+{
+  displayName: 'Operation',
+  name: 'operation',
+  type: 'options',
+  noDataExpression: true,
+  displayOptions: {
+    show: {
+      resource: ['shieldedOperations'],
+    },
+  },
+  options: [
+    {
+      name: 'Generate New Shielded Address',
+      value: 'zGetNewAddress',
+      description: 'Generate a new shielded address',
+      action: 'Generate new shielded address',
+    },
+    {
+      name: 'List Shielded Addresses',
+      value: 'zListAddresses',
+      description: 'List all shielded addresses',
+      action: 'List shielded addresses',
+    },
+    {
+      name: 'Get Shielded Balance',
+      value: 'zGetBalance',
+      description: 'Get balance of a shielded address',
+      action: 'Get shielded balance',
+    },
+    {
+      name: 'Send Shielded Transaction',
+      value: 'zSendMany',
+      description: 'Send a shielded transaction to multiple recipients',
+      action: 'Send shielded transaction',
+    },
+    {
+      name: 'Get Operation Status',
+      value: 'zGetOperationStatus',
+      description: 'Get status of async operations',
+      action: 'Get operation status',
+    },
+    {
+      name: 'Get Operation Result',
+      value: 'zGetOperationResult',
+      description: 'Get result of completed operations',
+      action: 'Get operation result',
+    },
+    {
+      name: 'List Operation IDs',
+      value: 'zListOperationIds',
+      description: 'List all operation IDs',
+      action: 'List operation IDs',
+    },
+  ],
+  default: 'zGetNewAddress',
+},
+{
+  displayName: 'Operation',
+  name: 'operation',
+  type: 'options',
+  noDataExpression: true,
+  displayOptions: {
+    show: {
+      resource: ['transactions'],
+    },
+  },
+  options: [
+    {
+      name: 'Send to Address',
+      value: 'sendToAddress',
+      description: 'Send ZEC to a transparent address',
+      action: 'Send to transparent address',
+    },
+    {
+      name: 'Get Transaction',
+      value: 'getTransaction',
+      description: 'Get detailed information about a transaction',
+      action: 'Get transaction details',
+    },
+    {
+      name: 'List Transactions',
+      value: 'listTransactions',
+      description: 'List recent transactions',
+      action: 'List recent transactions',
+    },
+    {
+      name: 'Get Raw Transaction',
+      value: 'getRawTransaction',
+      description: 'Get raw transaction data in hex format',
+      action: 'Get raw transaction data',
+    },
+    {
+      name: 'Send Raw Transaction',
+      value: 'sendRawTransaction',
+      description: 'Broadcast a raw transaction to the network',
+      action: 'Broadcast raw transaction',
+    },
+    {
+      name: 'Get Transaction Receipt',
+      value: 'getTransactionReceipt',
+      description: 'Get transaction receipt information',
+      action: 'Get transaction receipt',
+    },
+  ],
+  default: 'sendToAddress',
+},
+{
+  displayName: 'Operation',
+  name: 'operation',
+  type: 'options',
+  noDataExpression: true,
+  displayOptions: {
+    show: {
+      resource: ['blockchain'],
+    },
+  },
+  options: [
+    {
+      name: 'Get Blockchain Info',
+      value: 'getBlockchainInfo',
+      description: 'Get blockchain status information',
+      action: 'Get blockchain info',
+    },
+    {
+      name: 'Get Block',
+      value: 'getBlock',
+      description: 'Get block information',
+      action: 'Get block',
+    },
+    {
+      name: 'Get Block Hash',
+      value: 'getBlockHash',
+      description: 'Get block hash by height',
+      action: 'Get block hash',
+    },
+    {
+      name: 'Get Block Count',
+      value: 'getBlockCount',
+      description: 'Get current block height',
+      action: 'Get block count',
+    },
+    {
+      name: 'Get Best Block Hash',
+      value: 'getBestBlockHash',
+      description: 'Get hash of best block',
+      action: 'Get best block hash',
+    },
+    {
+      name: 'Get Chain Tips',
+      value: 'getChainTips',
+      description: 'Get information about chain tips',
+      action: 'Get chain tips',
+    },
+  ],
+  default: 'getBlockchainInfo',
+},
+{
+  displayName: 'Operation',
+  name: 'operation',
+  type: 'options',
+  noDataExpression: true,
+  displayOptions: {
+    show: {
+      resource: ['mining'],
+    },
+  },
+  options: [
+    {
+      name: 'Get Network Solution Rate',
+      value: 'getNetworkSolps',
+      description: 'Get the network solution rate',
+      action: 'Get network solution rate',
+    },
+    {
+      name: 'Get Mining Info',
+      value: 'getMiningInfo',
+      description: 'Get mining-related information',
+      action: 'Get mining info',
+    },
+    {
+      name: 'Get Block Template',
+      value: 'getBlockTemplate',
+      description: 'Get block template for mining',
+      action: 'Get block template',
+    },
+    {
+      name: 'Submit Block',
+      value: 'submitBlock',
+      description: 'Submit a mined block',
+      action: 'Submit block',
+    },
+    {
+      name: 'Get Difficulty',
+      value: 'getDifficulty',
+      description: 'Get current mining difficulty',
+      action: 'Get difficulty',
+    },
+    {
+      name: 'Get Network Hash Rate',
+      value: 'getNetworkHashps',
+      description: 'Get network hash rate',
+      action: 'Get network hash rate',
+    },
+  ],
+  default: 'getNetworkSolps',
+},
+      // Parameter definitions
+{
+  displayName: 'Account',
+  name: 'account',
+  type: 'string',
+  displayOptions: {
+    show: {
+      resource: ['wallet'],
+      operation: ['getBalance'],
+    },
+  },
+  default: '',
+  description: 'Account name for balance query (optional)',
+},
+{
+  displayName: 'Minimum Confirmations',
+  name: 'minconf',
+  type: 'number',
+  displayOptions: {
+    show: {
+      resource: ['wallet'],
+      operation: ['getBalance'],
+    },
+  },
+  default: 1,
+  description: 'Minimum number of confirmations',
+},
+{
+  displayName: 'Include Watch Only',
+  name: 'includeWatchonly',
+  type: 'boolean',
+  displayOptions: {
+    show: {
+      resource: ['wallet'],
+      operation: ['getBalance'],
+    },
+  },
+  default: false,
+  description: 'Whether to include watch-only addresses',
+},
+{
+  displayName: 'Account',
+  name: 'account',
+  type: 'string',
+  displayOptions: {
+    show: {
+      resource: ['wallet'],
+      operation: ['getNewAddress'],
+    },
+  },
+  default: '',
+  description: 'Account name for new address (optional)',
+},
+{
+  displayName: 'Account',
+  name: 'account',
+  type: 'string',
+  required: true,
+  displayOptions: {
+    show: {
+      resource: ['wallet'],
+      operation: ['getAddressesByAccount'],
+    },
+  },
+  default: '',
+  description: 'Account name to list addresses for',
+},
+{
+  displayName: 'Destination',
+  name: 'destination',
+  type: 'string',
+  required: true,
+  displayOptions: {
+    show: {
+      resource: ['wallet'],
+      operation: ['backupWallet'],
+    },
+  },
+  default: '',
+  description: 'Path and filename for wallet backup',
+},
+{
+  displayName: 'Passphrase',
+  name: 'passphrase',
+  type: 'string',
+  required: true,
+  typeOptions: {
+    password: true,
+  },
+  displayOptions: {
+    show: {
+      resource: ['wallet'],
+      operation: ['encryptWallet'],
+    },
+  },
+  default: '',
+  description: 'Passphrase to encrypt the wallet',
+},
+{
+  displayName: 'Passphrase',
+  name: 'passphrase',
+  type: 'string',
+  required: true,
+  typeOptions: {
+    password: true,
+  },
+  displayOptions: {
+    show: {
+      resource: ['wallet'],
+      operation: ['walletPassphrase'],
+    },
+  },
+  default: '',
+  description: 'Wallet passphrase to unlock',
+},
+{
+  displayName: 'Timeout',
+  name: 'timeout',
+  type: 'number',
+  required: true,
+  displayOptions: {
+    show: {
+      resource: ['wallet'],
+      operation: ['walletPassphrase'],
+    },
+  },
+  default: 60,
+  description: 'Timeout in seconds for wallet unlock',
+},
+{
+  displayName: 'Address Type',
+  name: 'type',
+  type: 'options',
+  displayOptions: {
+    show: {
+      resource: ['shieldedOperations'],
+      operation: ['zGetNewAddress'],
+    },
+  },
+  options: [
+    {
+      name: 'Sapling',
+      value: 'sapling',
+    },
+    {
+      name: 'Sprout',
+      value: 'sprout',
+    },
+  ],
+  default: 'sapling',
+  description: 'Type of shielded address to generate',
+},
+{
+  displayName: 'Include Watch Only',
+  name: 'includeWatchonly',
+  type: 'boolean',
+  displayOptions: {
+    show: {
+      resource: ['shieldedOperations'],
+      operation: ['zListAddresses'],
+    },
+  },
+  default: false,
+  description: 'Whether to include watch-only addresses',
+},
+{
+  displayName: 'Address',
+  name: 'address',
+  type: 'string',
+  required: true,
+  displayOptions: {
+    show: {
+      resource: ['shieldedOperations'],
+      operation: ['zGetBalance'],
+    },
+  },
+  default: '',
+  description: 'The shielded address to get balance for',
+},
+{
+  displayName: 'Minimum Confirmations',
+  name: 'minconf',
+  type: 'number',
+  displayOptions: {
+    show: {
+      resource: ['shieldedOperations'],
+      operation: ['zGetBalance', 'zSendMany'],
+    },
+  },
+  default: 1,
+  description: 'Minimum number of confirmations required',
+},
+{
+  displayName: 'From Address',
+  name: 'fromaddress',
+  type: 'string',
+  required: true,
+  displayOptions: {
+    show: {
+      resource: ['shieldedOperations'],
+      operation: ['zSendMany'],
+    },
+  },
+  default: '',
+  description: 'Source address for the transaction',
+},
+{
+  displayName: 'Amounts',
+  name: 'amounts',
+  type: 'json',
+  required: true,
+  displayOptions: {
+    show: {
+      resource: ['shieldedOperations'],
+      operation: ['zSendMany'],
+    },
+  },
+  default: '[]',
+  description: 'Array of recipient objects with address and amount fields',
+},
+{
+  displayName: 'Transaction Fee',
+  name: 'fee',
+  type: 'number',
+  displayOptions: {
+    show: {
+      resource: ['shieldedOperations'],
+      operation: ['zSendMany'],
+    },
+  },
+  default: 0.0001,
+  description: 'Transaction fee in ZEC',
+},
+{
+  displayName: 'Operation IDs',
+  name: 'opids',
+  type: 'json',
+  required: true,
+  displayOptions: {
+    show: {
+      resource: ['shieldedOperations'],
+      operation: ['zGetOperationStatus', 'zGetOperationResult'],
+    },
+  },
+  default: '[]',
+  description: 'Array of operation IDs to check',
+},
+{
+  displayName: 'Status Filter',
+  name: 'status',
+  type: 'options',
+  displayOptions: {
+    show: {
+      resource: ['shieldedOperations'],
+      operation: ['zListOperationIds'],
+    },
+  },
+  options: [
+    {
+      name: 'All',
+      value: '',
+    },
+    {
+      name: 'Queued',
+      value: 'queued',
+    },
+    {
+      name: 'Executing',
+      value: 'executing',
+    },
+    {
+      name: 'Success',
+      value: 'success',
+    },
+    {
+      name: 'Failed',
+      value: 'failed',
+    },
+    {
+      name: 'Cancelled',
+      value: 'cancelled',
+    },
+  ],
+  default: '',
+  description: 'Filter operations by status',
+},
+{
+  displayName: 'Address',
+  name: 'address',
+  type: 'string',
+  required: true,
+  displayOptions: {
+    show: {
+      resource: ['transactions'],
+      operation: ['sendToAddress'],
+    },
+  },
+  default: '',
+  description: 'The transparent address to send ZEC to',
+},
+{
+  displayName: 'Amount',
+  name: 'amount',
+  type: 'number',
+  required: true,
+  displayOptions: {
+    show: {
+      resource: ['transactions'],
+      operation: ['sendToAddress'],
+    },
+  },
+  default: 0,
+  description: 'The amount of ZEC to send',
+},
+{
+  displayName: 'Comment',
+  name: 'comment',
+  type: 'string',
+  required: false,
+  displayOptions: {
+    show: {
+      resource: ['transactions'],
+      operation: ['sendToAddress'],
+    },
+  },
+  default: '',
+  description: 'A comment to store what the transaction is for',
+},
+{
+  displayName: 'Comment To',
+  name: 'commentto',
+  type: 'string',
+  required: false,
+  displayOptions: {
+    show: {
+      resource: ['transactions'],
+      operation: ['sendToAddress'],
+    },
+  },
+  default: '',
+  description: 'A comment to store the name of the person or organization to which you are sending the transaction',
+},
+{
+  displayName: 'Subtract Fee From Amount',
+  name: 'subtractfeefromamount',
+  type: 'boolean',
+  required: false,
+  displayOptions: {
+    show: {
+      resource: ['transactions'],
+      operation: ['sendToAddress'],
+    },
+  },
+  default: false,
+  description: 'Whether the fee will be deducted from the amount being sent',
+},
+{
+  displayName: 'Transaction ID',
+  name: 'txid',
+  type: 'string',
+  required: true,
+  displayOptions: {
+    show: {
+      resource: ['transactions'],
+      operation: ['getTransaction', 'getRawTransaction', 'getTransactionReceipt'],
+    },
+  },
+  default: '',
+  description: 'The transaction ID to query',
+},
+{
+  displayName: 'Include Watch Only',
+  name: 'includeWatchonly',
+  type: 'boolean',
+  required: false,
+  displayOptions: {
+    show: {
+      resource: ['transactions'],
+      operation: ['getTransaction', 'listTransactions'],
+    },
+  },
+  default: false,
+  description: 'Whether to include watch-only addresses in the results',
+},
+{
+  displayName: 'Account',
+  name: 'account',
+  type: 'string',
+  required: false,
+  displayOptions: {
+    show: {
+      resource: ['transactions'],
+      operation: ['listTransactions'],
+    },
+  },
+  default: '',
+  description: 'The account name to list transactions for (deprecated, use "" for default)',
+},
+{
+  displayName: 'Count',
+  name: 'count',
+  type: 'number',
+  required: false,
+  displayOptions: {
+    show: {
+      resource: ['transactions'],
+      operation: ['listTransactions'],
+    },
+  },
+  default: 10,
+  description: 'The number of transactions to return (default: 10)',
+},
+{
+  displayName: 'Skip',
+  name: 'skip',
+  type: 'number',
+  required: false,
+  displayOptions: {
+    show: {
+      resource: ['transactions'],
+      operation: ['listTransactions'],
+    },
+  },
+  default: 0,
+  description: 'The number of transactions to skip',
+},
+{
+  displayName: 'Verbose',
+  name: 'verbose',
+  type: 'boolean',
+  required: false,
+  displayOptions: {
+    show: {
+      resource: ['transactions'],
+      operation: ['getRawTransaction'],
+    },
+  },
+  default: false,
+  description: 'Whether to return a JSON object instead of hex string',
+},
+{
+  displayName: 'Hex String',
+  name: 'hexstring',
+  type: 'string',
+  required: true,
+  displayOptions: {
+    show: {
+      resource: ['transactions'],
+      operation: ['sendRawTransaction'],
+    },
+  },
+  default: '',
+  description: 'The raw transaction hex string to broadcast',
+},
+{
+  displayName: 'Allow High Fees',
+  name: 'allowhighfees',
+  type: 'boolean',
+  required: false,
+  displayOptions: {
+    show: {
+      resource: ['transactions'],
+      operation: ['sendRawTransaction'],
+    },
+  },
+  default: false,
+  description: 'Whether to allow high fees for the transaction',
+},
+{
+  displayName: 'Block Hash',
+  name: 'blockhash',
+  type: 'string',
+  required: true,
+  displayOptions: {
+    show: {
+      resource: ['blockchain'],
+      operation: ['getBlock'],
+    },
+  },
+  default: '',
+  description: 'The block hash to retrieve information for',
+},
+{
+  displayName: 'Verbosity',
+  name: 'verbosity',
+  type: 'options',
+  displayOptions: {
+    show: {
+      resource: ['blockchain'],
+      operation: ['getBlock'],
+    },
+  },
+  options: [
+    {
+      name: '0 - Hex String',
+      value: 0,
+    },
+    {
+      name: '1 - JSON Object',
+      value: 1,
+    },
+    {
+      name: '2 - JSON Object with Transaction Data',
+      value: 2,
+    },
+  ],
+  default: 1,
+  description: 'Level of detail to return for the block',
+},
+{
+  displayName: 'Height',
+  name: 'height',
+  type: 'number',
+  required: true,
+  displayOptions: {
+    show: {
+      resource: ['blockchain'],
+      operation: ['getBlockHash'],
+    },
+  },
+  default: 0,
+  description: 'The block height to get the hash for',
+},
+{
+  displayName: 'Blocks',
+  name: 'blocks',
+  type: 'number',
+  displayOptions: {
+    show: {
+      resource: ['mining'],
+      operation: ['getNetworkSolps', 'getNetworkHashps'],
+    },
+  },
+  default: 120,
+  description: 'Number of blocks to average over (-1 for all blocks)',
+},
+{
+  displayName: 'Height',
+  name: 'height',
+  type: 'number',
+  displayOptions: {
+    show: {
+      resource: ['mining'],
+      operation: ['getNetworkSolps', 'getNetworkHashps'],
+    },
+  },
+  default: -1,
+  description: 'Block height to calculate average from (-1 for current tip)',
+},
+{
+  displayName: 'JSON Request Object',
+  name: 'jsonRequestObject',
+  type: 'json',
+  required: true,
+  displayOptions: {
+    show: {
+      resource: ['mining'],
+      operation: ['getBlockTemplate'],
+    },
+  },
+  default: '{}',
+  description: 'Block template request object',
+},
+{
+  displayName: 'Hex Data',
+  name: 'hexData',
+  type: 'string',
+  required: true,
+  displayOptions: {
+    show: {
+      resource: ['mining'],
+      operation: ['submitBlock'],
+    },
+  },
+  default: '',
+  description: 'The hex-encoded block data to submit',
+},
+{
+  displayName: 'JSON Parameters Object',
+  name: 'jsonParametersObject',
+  type: 'json',
+  displayOptions: {
+    show: {
+      resource: ['mining'],
+      operation: ['submitBlock'],
+    },
+  },
+  default: '{}',
+  description: 'Optional parameters object for block submission',
+},
     ],
   };
 
   async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
-    logLicensingNotice();
-
     const items = this.getInputData();
-    const returnData: INodeExecutionData[] = [];
     const resource = this.getNodeParameter('resource', 0) as string;
-    const operation = this.getNodeParameter('operation', 0) as string;
-    const client = await createRpcClient(this);
 
-    for (let i = 0; i < items.length; i++) {
+    switch (resource) {
+      case 'wallet':
+        return [await executeWalletOperations.call(this, items)];
+      case 'shieldedOperations':
+        return [await executeShieldedOperationsOperations.call(this, items)];
+      case 'transactions':
+        return [await executeTransactionsOperations.call(this, items)];
+      case 'blockchain':
+        return [await executeBlockchainOperations.call(this, items)];
+      case 'mining':
+        return [await executeMiningOperations.call(this, items)];
+      default:
+        throw new NodeOperationError(this.getNode(), `The resource "${resource}" is not supported`);
+    }
+  }
+}
+
+// ============================================================
+// Resource Handler Functions
+// ============================================================
+
+async function executeWalletOperations(
+  this: IExecuteFunctions,
+  items: INodeExecutionData[],
+): Promise<INodeExecutionData[]> {
+  const returnData: INodeExecutionData[] = [];
+  const operation = this.getNodeParameter('operation', 0) as string;
+  const credentials = await this.getCredentials('zcashApi') as any;
+
+  for (let i = 0; i < items.length; i++) {
+    try {
+      let result: any;
+
+      const baseOptions: any = {
+        method: 'POST',
+        url: credentials.baseUrl || 'http://localhost:8232',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        json: true,
+        auth: {
+          user: credentials.username,
+          pass: credentials.password,
+        },
+      };
+
+      switch (operation) {
+        case 'getBalance': {
+          const account = this.getNodeParameter('account', i, '') as string;
+          const minconf = this.getNodeParameter('minconf', i, 1) as number;
+          const includeWatchonly = this.getNodeParameter('includeWatchonly', i, false) as boolean;
+
+          const params: any[] = [];
+          if (account) params.push(account);
+          else params.push('');
+          params.push(minconf);
+          params.push(includeWatchonly);
+
+          const options = {
+            ...baseOptions,
+            body: {
+              jsonrpc: '1.0',
+              id: 'n8n',
+              method: 'getbalance',
+              params,
+            },
+          };
+
+          result = await this.helpers.httpRequest(options) as any;
+          break;
+        }
+
+        case 'getNewAddress': {
+          const account = this.getNodeParameter('account', i, '') as string;
+
+          const params: any[] = [];
+          if (account) params.push(account);
+
+          const options = {
+            ...baseOptions,
+            body: {
+              jsonrpc: '1.0',
+              id: 'n8n',
+              method: 'getnewaddress',
+              params,
+            },
+          };
+
+          result = await this.helpers.httpRequest(options) as any;
+          break;
+        }
+
+        case 'getAddressesByAccount': {
+          const account = this.getNodeParameter('account', i) as string;
+
+          const options = {
+            ...baseOptions,
+            body: {
+              jsonrpc: '1.0',
+              id: 'n8n',
+              method: 'getaddressesbyaccount',
+              params: [account],
+            },
+          };
+
+          result = await this.helpers.httpRequest(options) as any;
+          break;
+        }
+
+        case 'listAddresses': {
+          const options = {
+            ...baseOptions,
+            body: {
+              jsonrpc: '1.0',
+              id: 'n8n',
+              method: 'listaddresses',
+              params: [],
+            },
+          };
+
+          result = await this.helpers.httpRequest(options) as any;
+          break;
+        }
+
+        case 'backupWallet': {
+          const destination = this.getNodeParameter('destination', i) as string;
+
+          const options = {
+            ...baseOptions,
+            body: {
+              jsonrpc: '1.0',
+              id: 'n8n',
+              method: 'backupwallet',
+              params: [destination],
+            },
+          };
+
+          result = await this.helpers.httpRequest(options) as any;
+          break;
+        }
+
+        case 'encryptWallet': {
+          const passphrase = this.getNodeParameter('passphrase', i) as string;
+
+          const options = {
+            ...baseOptions,
+            body: {
+              jsonrpc: '1.0',
+              id: 'n8n',
+              method: 'encryptwallet',
+              params: [passphrase],
+            },
+          };
+
+          result = await this.helpers.httpRequest(options) as any;
+          break;
+        }
+
+        case 'walletPassphrase': {
+          const passphrase = this.getNodeParameter('passphrase', i) as string;
+          const timeout = this.getNodeParameter('timeout', i) as number;
+
+          const options = {
+            ...baseOptions,
+            body: {
+              jsonrpc: '1.0',
+              id: 'n8n',
+              method: 'walletpassphrase',
+              params: [passphrase, timeout],
+            },
+          };
+
+          result = await this.helpers.httpRequest(options) as any;
+          break;
+        }
+
+        default:
+          throw new NodeOperationError(this.getNode(), `Unknown operation: ${operation}`);
+      }
+
+      if (result.error) {
+        throw new NodeApiError(this.getNode(), result.error);
+      }
+
+      returnData.push({ json: result.result, pairedItem: { item: i } });
+
+    } catch (error: any) {
+      if (this.continueOnFail()) {
+        returnData.push({ json: { error: error.message }, pairedItem: { item: i } });
+      } else {
+        throw new NodeApiError(this.getNode(), error);
+      }
+    }
+  }
+
+  return returnData;
+}
+
+async function executeShieldedOperationsOperations(
+  this: IExecuteFunctions,
+  items: INodeExecutionData[],
+): Promise<INodeExecutionData[]> {
+  const returnData: INodeExecutionData[] = [];
+  const operation = this.getNodeParameter('operation', 0) as string;
+  const credentials = await this.getCredentials('zcashApi') as any;
+
+  for (let i = 0; i < items.length; i++) {
+    try {
+      let result: any;
+      let rpcParams: any[] = [];
+      let method = '';
+
+      switch (operation) {
+        case 'zGetNewAddress': {
+          const type = this.getNodeParameter('type', i) as string;
+          method = 'z_getnewaddress';
+          rpcParams = [type];
+          break;
+        }
+        case 'zListAddresses': {
+          const includeWatchonly = this.getNodeParameter('includeWatchonly', i) as boolean;
+          method = 'z_listaddresses';
+          rpcParams = [includeWatchonly];
+          break;
+        }
+        case 'zGetBalance': {
+          const address = this.getNodeParameter('address', i) as string;
+          const minconf = this.getNodeParameter('minconf', i) as number;
+          method = 'z_getbalance';
+          rpcParams = [address, minconf];
+          break;
+        }
+        case 'zSendMany': {
+          const fromaddress = this.getNodeParameter('fromaddress', i) as string;
+          const amounts = this.getNodeParameter('amounts', i) as string;
+          const minconf = this.getNodeParameter('minconf', i) as number;
+          const fee = this.getNodeParameter('fee', i) as number;
+          
+          let parsedAmounts: any;
+          try {
+            parsedAmounts = JSON.parse(amounts);
+          } catch (error: any) {
+            throw new NodeOperationError(this.getNode(), 'Invalid JSON format for amounts parameter');
+          }
+          
+          method = 'z_sendmany';
+          rpcParams = [fromaddress, parsedAmounts, minconf, fee];
+          break;
+        }
+        case 'zGetOperationStatus': {
+          const opids = this.getNodeParameter('opids', i) as string;
+          
+          let parsedOpids: any;
+          try {
+            parsedOpids = JSON.parse(opids);
+          } catch (error: any) {
+            throw new NodeOperationError(this.getNode(), 'Invalid JSON format for opids parameter');
+          }
+          
+          method = 'z_getoperationstatus';
+          rpcParams = [parsedOpids];
+          break;
+        }
+        case 'zGetOperationResult': {
+          const opids = this.getNodeParameter('opids', i) as string;
+          
+          let parsedOpids: any;
+          try {
+            parsedOpids = JSON.parse(opids);
+          } catch (error: any) {
+            throw new NodeOperationError(this.getNode(), 'Invalid JSON format for opids parameter');
+          }
+          
+          method = 'z_getoperationresult';
+          rpcParams = [parsedOpids];
+          break;
+        }
+        case 'zListOperationIds': {
+          const status = this.getNodeParameter('status', i) as string;
+          method = 'z_listoperationids';
+          rpcParams = status ? [status] : [];
+          break;
+        }
+        default:
+          throw new NodeOperationError(this.getNode(), `Unknown operation: ${operation}`);
+      }
+
+      const requestBody = {
+        jsonrpc: '1.0',
+        id: `n8n-${Date.now()}`,
+        method,
+        params: rpcParams,
+      };
+
+      const options: any = {
+        method: 'POST',
+        url: credentials.baseUrl || 'http://localhost:8232',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Basic ${Buffer.from(`${credentials.username}:${credentials.password}`).toString('base64')}`,
+        },
+        body: JSON.stringify(requestBody),
+        json: false,
+      };
+
+      const response = await this.helpers.httpRequest(options) as any;
+      
+      let parsedResponse: any;
       try {
-        let result: INodeExecutionData[];
+        parsedResponse = JSON.parse(response);
+      } catch (error: any) {
+        throw new NodeApiError(this.getNode(), { message: 'Invalid JSON response from Zcash node' });
+      }
 
-        // Route to appropriate operation
-        switch (resource) {
-          case 'wallet':
-            result = await executeWalletOperation(this, client, operation, i);
-            break;
-          case 'transaction':
-            result = await executeTransactionOperation(this, client, operation, i);
-            break;
-          case 'block':
-            result = await executeBlockOperation(this, client, operation, i);
-            break;
-          case 'shielded':
-            result = await executeShieldedOperation(this, client, operation, i);
-            break;
-          case 'keys':
-            result = await executeKeysOperation(this, client, operation, i);
-            break;
-          case 'mining':
-            result = await executeMiningOperation(this, client, operation, i);
-            break;
-          case 'network':
-            result = await executeNetworkOperation(this, client, operation, i);
-            break;
-          case 'utility':
-            result = await executeUtilityOperation(this, client, operation, i);
-            break;
-          default:
-            throw new Error(`Unknown resource: ${resource}`);
-        }
+      if (parsedResponse.error) {
+        throw new NodeApiError(this.getNode(), {
+          message: parsedResponse.error.message || 'Unknown RPC error',
+          code: parsedResponse.error.code,
+        });
+      }
 
-        returnData.push(...result);
-      } catch (error) {
-        if (this.continueOnFail()) {
-          returnData.push({ json: { error: (error as Error).message } });
-          continue;
-        }
+      result = parsedResponse.result;
+      returnData.push({ json: result, pairedItem: { item: i } });
+
+    } catch (error: any) {
+      if (this.continueOnFail()) {
+        returnData.push({ 
+          json: { error: error.message }, 
+          pairedItem: { item: i } 
+        });
+      } else {
         throw error;
       }
     }
-
-    return [returnData];
   }
+
+  return returnData;
+}
+
+async function executeTransactionsOperations(
+  this: IExecuteFunctions,
+  items: INodeExecutionData[],
+): Promise<INodeExecutionData[]> {
+  const returnData: INodeExecutionData[] = [];
+  const operation = this.getNodeParameter('operation', 0) as string;
+  const credentials = await this.getCredentials('zcashApi') as any;
+
+  for (let i = 0; i < items.length; i++) {
+    try {
+      let result: any;
+      
+      switch (operation) {
+        case 'sendToAddress': {
+          const address = this.getNodeParameter('address', i) as string;
+          const amount = this.getNodeParameter('amount', i) as number;
+          const comment = this.getNodeParameter('comment', i, '') as string;
+          const commentto = this.getNodeParameter('commentto', i, '') as string;
+          const subtractfeefromamount = this.getNodeParameter('subtractfeefromamount', i, false) as boolean;
+
+          const params: any[] = [address, amount];
+          if (comment) params.push(comment);
+          if (commentto || params.length > 2) params.push(commentto);
+          if (subtractfeefromamount || params.length > 3) params.push(subtractfeefromamount);
+
+          const body: any = {
+            jsonrpc: '1.0',
+            id: 'n8n',
+            method: 'sendtoaddress',
+            params,
+          };
+
+          const options: any = {
+            method: 'POST',
+            url: credentials.baseUrl || 'http://localhost:8232',
+            auth: {
+              username: credentials.username,
+              password: credentials.password,
+            },
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body,
+            json: true,
+          };
+
+          const response = await this.helpers.httpRequest(options) as any;
+          if (response.error) {
+            throw new NodeOperationError(this.getNode(), `Zcash RPC Error: ${response.error.message}`);
+          }
+          result = response.result;
+          break;
+        }
+
+        case 'getTransaction': {
+          const txid = this.getNodeParameter('txid', i) as string;
+          const includeWatchonly = this.getNodeParameter('includeWatchonly', i, false) as boolean;
+
+          const body: any = {
+            jsonrpc: '1.0',
+            id: 'n8n',
+            method: 'gettransaction',
+            params: [txid, includeWatchonly],
+          };
+
+          const options: any = {
+            method: 'POST',
+            url: credentials.baseUrl || 'http://localhost:8232',
+            auth: {
+              username: credentials.username,
+              password: credentials.password,
+            },
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body,
+            json: true,
+          };
+
+          const response = await this.helpers.httpRequest(options) as any;
+          if (response.error) {
+            throw new NodeOperationError(this.getNode(), `Zcash RPC Error: ${response.error.message}`);
+          }
+          result = response.result;
+          break;
+        }
+
+        case 'listTransactions': {
+          const account = this.getNodeParameter('account', i, '') as string;
+          const count = this.getNodeParameter('count', i, 10) as number;
+          const skip = this.getNodeParameter('skip', i, 0) as number;
+          const includeWatchonly = this.getNodeParameter('includeWatchonly', i, false) as boolean;
+
+          const body: any = {
+            jsonrpc: '1.0',
+            id: 'n8n',
+            method: 'listtransactions',
+            params: [account, count, skip, includeWatchonly],
+          };
+
+          const options: any = {
+            method: 'POST',
+            url: credentials.baseUrl || 'http://localhost:8232',
+            auth: {
+              username: credentials.username,
+              password: credentials.password,
+            },
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body,
+            json: true,
+          };
+
+          const response = await this.helpers.httpRequest(options) as any;
+          if (response.error) {
+            throw new NodeOperationError(this.getNode(), `Zcash RPC Error: ${response.error.message}`);
+          }
+          result = response.result;
+          break;
+        }
+
+        case 'getRawTransaction': {
+          const txid = this.getNodeParameter('txid', i) as string;
+          const verbose = this.getNodeParameter('verbose', i, false) as boolean;
+
+          const body: any = {
+            jsonrpc: '1.0',
+            id: 'n8n',
+            method: 'getrawtransaction',
+            params: [txid, verbose ? 1 : 0],
+          };
+
+          const options: any = {
+            method: 'POST',
+            url: credentials.baseUrl || 'http://localhost:8232',
+            auth: {
+              username: credentials.username,
+              password: credentials.password,
+            },
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body,
+            json: true,
+          };
+
+          const response = await this.helpers.httpRequest(options) as any;
+          if (response.error) {
+            throw new NodeOperationError(this.getNode(), `Zcash RPC Error: ${response.error.message}`);
+          }
+          result = response.result;
+          break;
+        }
+
+        case 'sendRawTransaction': {
+          const hexstring = this.getNodeParameter('hexstring', i) as string;
+          const allowhighfees = this.getNodeParameter('allowhighfees', i, false) as boolean;
+
+          const body: any = {
+            jsonrpc: '1.0',
+            id: 'n8n',
+            method: 'sendrawtransaction',
+            params: [hexstring, allowhighfees],
+          };
+
+          const options: any = {
+            method: 'POST',
+            url: credentials.baseUrl || 'http://localhost:8232',
+            auth: {
+              username: credentials.username,
+              password: credentials.password,
+            },
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body,
+            json: true,
+          };
+
+          const response = await this.helpers.httpRequest(options) as any;
+          if (response.error) {
+            throw new NodeOperationError(this.getNode(), `Zcash RPC Error: ${response.error.message}`);
+          }
+          result = response.result;
+          break;
+        }
+
+        case 'getTransactionReceipt': {
+          const txid = this.getNodeParameter('txid', i) as string;
+
+          const body: any = {
+            jsonrpc: '1.0',
+            id: 'n8n',
+            method: 'gettransactionreceipt',
+            params: [txid],
+          };
+
+          const options: any = {
+            method: 'POST',
+            url: credentials.baseUrl || 'http://localhost:8232',
+            auth: {
+              username: credentials.username,
+              password: credentials.password,
+            },
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body,
+            json: true,
+          };
+
+          const response = await this.helpers.httpRequest(options) as any;
+          if (response.error) {
+            throw new NodeOperationError(this.getNode(), `Zcash RPC Error: ${response.error.message}`);
+          }
+          result = response.result;
+          break;
+        }
+
+        default:
+          throw new NodeOperationError(this.getNode(), `Unknown operation: ${operation}`);
+      }
+
+      returnData.push({ json: result, pairedItem: { item: i } });
+    } catch (error: any) {
+      if (this.continueOnFail()) {
+        returnData.push({ json: { error: error.message }, pairedItem: { item: i } });
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  return returnData;
+}
+
+async function executeBlockchainOperations(
+  this: IExecuteFunctions,
+  items: INodeExecutionData[],
+): Promise<INodeExecutionData[]> {
+  const returnData: INodeExecutionData[] = [];
+  const operation = this.getNodeParameter('operation', 0) as string;
+  const credentials = await this.getCredentials('zcashApi') as any;
+
+  for (let i = 0; i < items.length; i++) {
+    try {
+      let result: any;
+      
+      switch (operation) {
+        case 'getBlockchainInfo': {
+          const requestBody: any = {
+            jsonrpc: '1.0',
+            id: 'n8n-zcash',
+            method: 'getblockchaininfo',
+            params: [],
+          };
+
+          const options: any = {
+            method: 'POST',
+            url: credentials.baseUrl || 'http://localhost:8232',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Basic ' + Buffer.from(credentials.username + ':' + credentials.password).toString('base64'),
+            },
+            body: JSON.stringify(requestBody),
+            json: false,
+          };
+
+          const response = await this.helpers.httpRequest(options) as any;
+          const parsedResponse = typeof response === 'string' ? JSON.parse(response) : response;
+          
+          if (parsedResponse.error) {
+            throw new NodeApiError(this.getNode(), parsedResponse.error);
+          }
+          
+          result = parsedResponse.result;
+          break;
+        }
+
+        case 'getBlock': {
+          const blockhash = this.getNodeParameter('blockhash', i) as string;
+          const verbosity = this.getNodeParameter('verbosity', i) as number;
+
+          const requestBody: any = {
+            jsonrpc: '1.0',
+            id: 'n8n-zcash',
+            method: 'getblock',
+            params: [blockhash, verbosity],
+          };
+
+          const options: any = {
+            method: 'POST',
+            url: credentials.baseUrl || 'http://localhost:8232',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Basic ' + Buffer.from(credentials.username + ':' + credentials.password).toString('base64'),
+            },
+            body: JSON.stringify(requestBody),
+            json: false,
+          };
+
+          const response = await this.helpers.httpRequest(options) as any;
+          const parsedResponse = typeof response === 'string' ? JSON.parse(response) : response;
+          
+          if (parsedResponse.error) {
+            throw new NodeApiError(this.getNode(), parsedResponse.error);
+          }
+          
+          result = parsedResponse.result;
+          break;
+        }
+
+        case 'getBlockHash': {
+          const height = this.getNodeParameter('height', i) as number;
+
+          const requestBody: any = {
+            jsonrpc: '1.0',
+            id: 'n8n-zcash',
+            method: 'getblockhash',
+            params: [height],
+          };
+
+          const options: any = {
+            method: 'POST',
+            url: credentials.baseUrl || 'http://localhost:8232',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Basic ' + Buffer.from(credentials.username + ':' + credentials.password).toString('base64'),
+            },
+            body: JSON.stringify(requestBody),
+            json: false,
+          };
+
+          const response = await this.helpers.httpRequest(options) as any;
+          const parsedResponse = typeof response === 'string' ? JSON.parse(response) : response;
+          
+          if (parsedResponse.error) {
+            throw new NodeApiError(this.getNode(), parsedResponse.error);
+          }
+          
+          result = parsedResponse.result;
+          break;
+        }
+
+        case 'getBlockCount': {
+          const requestBody: any = {
+            jsonrpc: '1.0',
+            id: 'n8n-zcash',
+            method: 'getblockcount',
+            params: [],
+          };
+
+          const options: any = {
+            method: 'POST',
+            url: credentials.baseUrl || 'http://localhost:8232',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Basic ' + Buffer.from(credentials.username + ':' + credentials.password).toString('base64'),
+            },
+            body: JSON.stringify(requestBody),
+            json: false,
+          };
+
+          const response = await this.helpers.httpRequest(options) as any;
+          const parsedResponse = typeof response === 'string' ? JSON.parse(response) : response;
+          
+          if (parsedResponse.error) {
+            throw new NodeApiError(this.getNode(), parsedResponse.error);
+          }
+          
+          result = parsedResponse.result;
+          break;
+        }
+
+        case 'getBestBlockHash': {
+          const requestBody: any = {
+            jsonrpc: '1.0',
+            id: 'n8n-zcash',
+            method: 'getbestblockhash',
+            params: [],
+          };
+
+          const options: any = {
+            method: 'POST',
+            url: credentials.baseUrl || 'http://localhost:8232',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Basic ' + Buffer.from(credentials.username + ':' + credentials.password).toString('base64'),
+            },
+            body: JSON.stringify(requestBody),
+            json: false,
+          };
+
+          const response = await this.helpers.httpRequest(options) as any;
+          const parsedResponse = typeof response === 'string' ? JSON.parse(response) : response;
+          
+          if (parsedResponse.error) {
+            throw new NodeApiError(this.getNode(), parsedResponse.error);
+          }
+          
+          result = parsedResponse.result;
+          break;
+        }
+
+        case 'getChainTips': {
+          const requestBody: any = {
+            jsonrpc: '1.0',
+            id: 'n8n-zcash',
+            method: 'getchaintips',
+            params: [],
+          };
+
+          const options: any = {
+            method: 'POST',
+            url: credentials.baseUrl || 'http://localhost:8232',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Basic ' + Buffer.from(credentials.username + ':' + credentials.password).toString('base64'),
+            },
+            body: JSON.stringify(requestBody),
+            json: false,
+          };
+
+          const response = await this.helpers.httpRequest(options) as any;
+          const parsedResponse = typeof response === 'string' ? JSON.parse(response) : response;
+          
+          if (parsedResponse.error) {
+            throw new NodeApiError(this.getNode(), parsedResponse.error);
+          }
+          
+          result = parsedResponse.result;
+          break;
+        }
+
+        default:
+          throw new NodeOperationError(this.getNode(), `Unknown operation: ${operation}`);
+      }
+
+      returnData.push({
+        json: result,
+        pairedItem: { item: i },
+      });
+    } catch (error: any) {
+      if (this.continueOnFail()) {
+        returnData.push({
+          json: { error: error.message },
+          pairedItem: { item: i },
+        });
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  return returnData;
+}
+
+async function executeMiningOperations(
+  this: IExecuteFunctions,
+  items: INodeExecutionData[],
+): Promise<INodeExecutionData[]> {
+  const returnData: INodeExecutionData[] = [];
+  const operation = this.getNodeParameter('operation', 0) as string;
+  const credentials = await this.getCredentials('zcashApi') as any;
+
+  for (let i = 0; i < items.length; i++) {
+    try {
+      let result: any;
+      
+      switch (operation) {
+        case 'getNetworkSolps': {
+          const blocks = this.getNodeParameter('blocks', i) as number;
+          const height = this.getNodeParameter('height', i) as number;
+          
+          const params: any[] = [];
+          if (blocks !== undefined) params.push(blocks);
+          if (height !== undefined && height !== -1) params.push(height);
+          
+          const requestBody: any = {
+            method: 'getnetworksolps',
+            params,
+            id: Date.now(),
+          };
+
+          const options: any = {
+            method: 'POST',
+            url: credentials.baseUrl || 'http://localhost:8232',
+            auth: {
+              username: credentials.username,
+              password: credentials.password,
+            },
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
+            json: false,
+          };
+          
+          const response = await this.helpers.httpRequest(options) as any;
+          result = JSON.parse(response);
+          break;
+        }
+
+        case 'getMiningInfo': {
+          const requestBody: any = {
+            method: 'getmininginfo',
+            params: [],
+            id: Date.now(),
+          };
+
+          const options: any = {
+            method: 'POST',
+            url: credentials.baseUrl || 'http://localhost:8232',
+            auth: {
+              username: credentials.username,
+              password: credentials.password,
+            },
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
+            json: false,
+          };
+          
+          const response = await this.helpers.httpRequest(options) as any;
+          result = JSON.parse(response);
+          break;
+        }
+
+        case 'getBlockTemplate': {
+          const jsonRequestObject = this.getNodeParameter('jsonRequestObject', i) as string;
+          let requestObject: any;
+          
+          try {
+            requestObject = JSON.parse(jsonRequestObject);
+          } catch (error: any) {
+            throw new NodeOperationError(this.getNode(), 'Invalid JSON in request object: ' + error.message);
+          }
+
+          const requestBody: any = {
+            method: 'getblocktemplate',
+            params: [requestObject],
+            id: Date.now(),
+          };
+
+          const options: any = {
+            method: 'POST',
+            url: credentials.baseUrl || 'http://localhost:8232',
+            auth: {
+              username: credentials.username,
+              password: credentials.password,
+            },
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
+            json: false,
+          };
+          
+          const response = await this.helpers.httpRequest(options) as any;
+          result = JSON.parse(response);
+          break;
+        }
+
+        case 'submitBlock': {
+          const hexData = this.getNodeParameter('hexData', i) as string;
+          const jsonParametersObject = this.getNodeParameter('jsonParametersObject', i) as string;
+          
+          const params: any[] = [hexData];
+          
+          if (jsonParametersObject && jsonParametersObject.trim() !== '{}') {
+            try {
+              const parametersObject = JSON.parse(jsonParametersObject);
+              params.push(parametersObject);
+            } catch (error: any) {
+              throw new NodeOperationError(this.getNode(), 'Invalid JSON in parameters object: ' + error.message);
+            }
+          }
+
+          const requestBody: any = {
+            method: 'submitblock',
+            params,
+            id: Date.now(),
+          };
+
+          const options: any = {
+            method: 'POST',
+            url: credentials.baseUrl || 'http://localhost:8232',
+            auth: {
+              username: credentials.username,
+              password: credentials.password,
+            },
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
+            json: false,
+          };
+          
+          const response = await this.helpers.httpRequest(options) as any;
+          result = JSON.parse(response);
+          break;
+        }
+
+        case 'getDifficulty': {
+          const requestBody: any = {
+            method: 'getdifficulty',
+            params: [],
+            id: Date.now(),
+          };
+
+          const options: any = {
+            method: 'POST',
+            url: credentials.baseUrl || 'http://localhost:8232',
+            auth: {
+              username: credentials.username,
+              password: credentials.password,
+            },
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
+            json: false,
+          };
+          
+          const response = await this.helpers.httpRequest(options) as any;
+          result = JSON.parse(response);
+          break;
+        }
+
+        case 'getNetworkHashps': {
+          const blocks = this.getNodeParameter('blocks', i) as number;
+          const height = this.getNodeParameter('height', i) as number;
+          
+          const params: any[] = [];
+          if (blocks !== undefined) params.push(blocks);
+          if (height !== undefined && height !== -1) params.push(height);
+          
+          const requestBody: any = {
+            method: 'getnetworkhashps',
+            params,
+            id: Date.now(),
+          };
+
+          const options: any = {
+            method: 'POST',
+            url: credentials.baseUrl || 'http://localhost:8232',
+            auth: {
+              username: credentials.username,
+              password: credentials.password,
+            },
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
+            json: false,
+          };
+          
+          const response = await this.helpers.httpRequest(options) as any;
+          result = JSON.parse(response);
+          break;
+        }
+
+        default:
+          throw new NodeOperationError(this.getNode(), `Unknown operation: ${operation}`);
+      }
+
+      returnData.push({
+        json: result,
+        pairedItem: {
+          item: i,
+        },
+      });
+
+    } catch (error: any) {
+      if (this.continueOnFail()) {
+        returnData.push({
+          json: { error: error.message },
+          pairedItem: { item: i },
+        });
+        continue;
+      }
+      throw new NodeApiError(this.getNode(), error);
+    }
+  }
+
+  return returnData;
 }
