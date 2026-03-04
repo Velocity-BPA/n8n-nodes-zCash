@@ -1,79 +1,53 @@
 {
-  "name": "n8n-nodes-zcash",
+  "name": "@velocity-bpa/n8n-nodes-zcash",
   "version": "1.0.0",
-  "description": "A comprehensive n8n community node for Zcash blockchain providing wallet management, transactions, shielded operations, and blockchain queries via zcashd RPC.",
-  "license": "BUSL-1.1",
-  "author": {
-    "name": "Velocity BPA",
-    "email": "licensing@velobpa.com",
-    "url": "https://velobpa.com"
+  "description": "n8n community node for Zcash",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "main": "dist/nodes/Zcash/Zcash.node.js",
+  "engines": {
+    "node": ">=18.0.0"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Velocity-BPA/n8n-nodes-zcash.git"
-  },
-  "homepage": "https://velobpa.com",
-  "keywords": [
-    "n8n",
-    "n8n-community-node-package",
-    "zcash",
-    "zec",
-    "blockchain",
-    "cryptocurrency",
-    "shielded",
-    "privacy",
-    "rpc",
-    "automation"
-  ],
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "packageManager": "pnpm@9.1.4",
   "files": [
-    "dist",
-    "LICENSE",
-    "COMMERCIAL_LICENSE.md",
-    "LICENSING_FAQ.md"
+    "dist/**/*"
   ],
-  "n8n": {
-    "n8nNodesApiVersion": 1,
-    "credentials": [
-      "dist/credentials/ZcashRpcApi.credentials.js"
-    ],
-    "nodes": [
-      "dist/nodes/Zcash/Zcash.node.js",
-      "dist/nodes/Zcash/ZcashTrigger.node.js"
-    ]
-  },
   "scripts": {
-    "prebuild": "rimraf dist",
     "build": "tsc && gulp build:icons",
     "dev": "tsc --watch",
-    "lint": "eslint . --ext .ts",
-    "lint:fix": "eslint . --ext .ts --fix",
-    "format": "prettier --write \"**/*.ts\"",
+    "lint": "eslint nodes credentials package.json",
+    "lintfix": "eslint nodes credentials package.json --fix",
+    "format": "prettier nodes credentials --write",
     "test": "jest",
     "test:coverage": "jest --coverage",
     "prepublishOnly": "npm run build"
   },
+  "keywords": [
+    "n8n",
+    "n8n-community-node-package",
+    "zcash",
+    "cryptocurrency",
+    "blockchain"
+  ],
+  "dependencies": {
+    "axios": "^1.6.0"
+  },
   "devDependencies": {
-    "@types/jest": "^29.5.12",
-    "@types/node": "^20.11.0",
-    "@typescript-eslint/eslint-plugin": "^7.0.0",
-    "@typescript-eslint/parser": "^7.0.0",
-    "eslint": "^8.56.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-n8n-nodes-base": "^1.16.0",
+    "@types/jest": "^29.5.5",
+    "@types/node": "^20.8.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-n8n-nodes-base": "^1.16.1",
     "gulp": "^4.0.2",
+    "gulp-rename": "^2.0.0",
     "jest": "^29.7.0",
     "n8n-workflow": "*",
-    "prettier": "^3.2.0",
-    "rimraf": "^5.0.5",
-    "ts-jest": "^29.1.2",
-    "typescript": "^5.3.0"
+    "prettier": "^3.0.3",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.2.2"
   },
   "peerDependencies": {
     "n8n-workflow": "*"
-  },
-  "engines": {
-    "node": ">=18.0.0"
   }
 }
