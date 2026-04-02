@@ -1,32 +1,37 @@
-import { ICredentialType, INodeProperties } from 'n8n-workflow';
+import {
+	ICredentialType,
+	INodeProperties,
+} from 'n8n-workflow';
 
 export class ZcashApi implements ICredentialType {
 	name = 'zcashApi';
 	displayName = 'Zcash API';
-	documentationUrl = 'https://zcash.readthedocs.io/en/latest/rtd_pages/rpc.html';
+	documentationUrl = 'zcash';
 	properties: INodeProperties[] = [
-		{
-			displayName: 'API Base URL',
-			name: 'baseUrl',
-			type: 'string',
-			default: 'http://localhost:8232',
-			description: 'The base URL for the Zcash RPC endpoint',
-			required: true,
-		},
 		{
 			displayName: 'RPC Username',
 			name: 'username',
 			type: 'string',
 			default: '',
-			description: 'RPC username configured in zcash.conf (rpcuser)',
 			required: true,
 		},
 		{
 			displayName: 'RPC Password',
 			name: 'password',
-			type: 'password',
+			type: 'string',
+			typeOptions: {
+				password: true,
+			},
 			default: '',
-			description: 'RPC password configured in zcash.conf (rpcpassword)',
+			required: true,
+		},
+		{
+			displayName: 'RPC URL',
+			name: 'url',
+			type: 'string',
+			default: 'http://127.0.0.1:8232',
+			placeholder: 'http://127.0.0.1:8232',
+			description: 'The RPC URL of your Zcash node',
 			required: true,
 		},
 	];
