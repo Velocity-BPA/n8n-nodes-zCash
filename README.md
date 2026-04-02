@@ -8,25 +8,25 @@
 >
 > For licensing information, visit https://velobpa.com/licensing or contact licensing@velobpa.com.
 
-A comprehensive n8n community node for Zcash blockchain operations, featuring 5 essential resources including wallet management, shielded transactions, blockchain queries, mining operations, and transaction processing with full support for both transparent and private Zcash operations.
+This n8n community node provides seamless integration with Zcash blockchain operations, offering 6 comprehensive resources for wallet management, transaction processing, shielded pool operations, blockchain exploration, mining activities, and network monitoring. Built for privacy-focused blockchain automation workflows.
 
 ![n8n Community Node](https://img.shields.io/badge/n8n-Community%20Node-blue)
 ![License](https://img.shields.io/badge/license-BSL--1.1-blue)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)
-![Zcash](https://img.shields.io/badge/Zcash-ZEC-gold)
-![Privacy](https://img.shields.io/badge/Privacy-Enabled-green)
-![zk-SNARKs](https://img.shields.io/badge/zk--SNARKs-Supported-purple)
+![Zcash](https://img.shields.io/badge/Zcash-ZEC-orange)
+![Privacy](https://img.shields.io/badge/Privacy-Focused-green)
+![Blockchain](https://img.shields.io/badge/Blockchain-Integration-purple)
 
 ## Features
 
-- **Wallet Operations** - Create, manage, and query Zcash wallets with full address support
-- **Shielded Transactions** - Execute private transactions using zk-SNARKs technology
-- **Transparent Operations** - Handle public Zcash transactions and address management
-- **Blockchain Queries** - Access block data, transaction history, and network statistics
-- **Mining Integration** - Monitor mining operations and network hash rates
-- **Balance Tracking** - Query both shielded and transparent balance information
-- **Multi-Address Support** - Work with t-addresses, z-addresses, and unified addresses
-- **Transaction Analysis** - Detailed transaction inspection and verification tools
+- **Wallet Operations** - Complete wallet management including creation, balance checking, address generation, and backup/restore functionality
+- **Transaction Processing** - Send, receive, and track both transparent and shielded transactions with full privacy controls
+- **Shielded Pool Management** - Advanced privacy operations including note commitment, nullifier management, and zero-knowledge proof handling
+- **Blockchain Exploration** - Query blocks, validate transactions, and access comprehensive blockchain data and statistics
+- **Mining Integration** - Monitor mining operations, manage pools, track hashrates, and access mining statistics
+- **Network Monitoring** - Real-time network status, peer management, consensus tracking, and protocol upgrade monitoring
+- **Privacy-First Design** - Built-in support for Zcash's privacy features with transparent and shielded address handling
+- **Enterprise Security** - Robust error handling, credential management, and audit logging for production environments
 
 ## Installation
 
@@ -61,11 +61,11 @@ n8n start
 
 | Field | Description | Required |
 |-------|-------------|----------|
-| API Key | Your Zcash node RPC API key or authentication token | Yes |
-| Node URL | Zcash node RPC endpoint (e.g., http://localhost:8232) | Yes |
-| Username | RPC username for basic authentication | No |
-| Password | RPC password for basic authentication | No |
-| SSL Certificate | Custom SSL certificate for secure connections | No |
+| API Key | Your Zcash node API access key | Yes |
+| Node URL | Zcash node endpoint URL (default: http://localhost:8232) | Yes |
+| Username | RPC username for node authentication | No |
+| Password | RPC password for node authentication | No |
+| SSL Verify | Enable SSL certificate verification | No |
 
 ## Resources & Operations
 
@@ -73,112 +73,136 @@ n8n start
 
 | Operation | Description |
 |-----------|-------------|
-| Create Address | Generate new t-addresses, z-addresses, or unified addresses |
-| Get Balance | Retrieve wallet balance for transparent and shielded pools |
-| List Addresses | Get all addresses associated with the wallet |
-| Export Private Key | Export private key for a specific address |
-| Import Private Key | Import an existing private key into the wallet |
-| Backup Wallet | Create a backup of the wallet data |
-| List Transactions | Get transaction history for the wallet |
-| Validate Address | Verify if an address is valid and get address info |
+| Create Wallet | Generate a new Zcash wallet with optional encryption |
+| Get Balance | Retrieve wallet balance for transparent and shielded funds |
+| List Addresses | Get all wallet addresses (transparent and shielded) |
+| Generate Address | Create new receiving addresses with specified type |
+| Backup Wallet | Export wallet data and seed phrases securely |
+| Restore Wallet | Import wallet from backup or seed phrase |
+| Lock Wallet | Encrypt and lock wallet with passphrase |
+| Unlock Wallet | Decrypt wallet for transaction operations |
 
-### 2. ShieldedOperations
-
-| Operation | Description |
-|-----------|-------------|
-| Shield Funds | Move funds from transparent to shielded pool |
-| Deshield Funds | Move funds from shielded to transparent pool |
-| Private Send | Send shielded transaction between z-addresses |
-| Get Shielded Balance | Query balance in shielded pools (Sprout/Sapling/Orchard) |
-| List Shielded Addresses | Get all z-addresses in the wallet |
-| Create Shielded Address | Generate new z-address for private transactions |
-| Get Operation Status | Check status of asynchronous shielded operations |
-| List Operations | Get all pending and completed shielded operations |
-
-### 3. Transactions
+### 2. Transaction
 
 | Operation | Description |
 |-----------|-------------|
 | Send Transaction | Send ZEC to transparent or shielded addresses |
-| Get Transaction | Retrieve detailed transaction information |
+| Get Transaction | Retrieve transaction details by transaction ID |
 | List Transactions | Get transaction history with filtering options |
-| Create Raw Transaction | Build unsigned transaction for manual signing |
-| Sign Transaction | Sign a raw transaction with wallet keys |
+| Create Raw Transaction | Build unsigned transaction for offline signing |
+| Sign Transaction | Sign raw transaction with wallet private keys |
 | Broadcast Transaction | Submit signed transaction to the network |
-| Estimate Fee | Calculate transaction fees for different priority levels |
-| Decode Transaction | Parse and decode raw transaction data |
+| Estimate Fee | Calculate optimal transaction fees |
+| Validate Address | Verify address format and type |
+
+### 3. ShieldedPool
+
+| Operation | Description |
+|-----------|-------------|
+| Shield Funds | Move transparent funds to shielded pool |
+| Deshield Funds | Move shielded funds to transparent addresses |
+| Create Note | Generate new note commitments for privacy |
+| Spend Note | Create nullifiers and spend shielded notes |
+| List Notes | Retrieve all unspent notes in wallet |
+| Generate Proof | Create zero-knowledge proofs for transactions |
+| Verify Proof | Validate zero-knowledge proofs |
+| Get Pool Status | Check shielded pool statistics and health |
 
 ### 4. Blockchain
 
 | Operation | Description |
 |-----------|-------------|
 | Get Block | Retrieve block data by height or hash |
-| Get Block Count | Get current blockchain height |
 | Get Block Hash | Get block hash for specific height |
-| Get Chain Info | Retrieve blockchain network information |
-| Get Network Info | Get network statistics and peer information |
-| Get Memory Pool | List unconfirmed transactions in mempool |
+| Get Block Height | Get current blockchain height |
+| List Blocks | Retrieve multiple blocks with pagination |
+| Get Chain Info | Get blockchain statistics and information |
+| Validate Block | Verify block structure and consensus rules |
+| Search | Search blockchain for addresses, transactions, or blocks |
 | Get Difficulty | Retrieve current mining difficulty |
-| Get Network Hash Rate | Get current network hash rate |
 
 ### 5. Mining
 
 | Operation | Description |
 |-----------|-------------|
 | Get Mining Info | Retrieve current mining statistics |
-| Get Hash Rate | Get local or network hash rate information |
-| Submit Block | Submit mined block to the network |
-| Get Block Template | Get block template for mining |
-| Priority Transactions | Get high-priority transactions for mining |
-| Generate Blocks | Generate blocks (testnet/regtest only) |
-| Get Network Sol Rate | Get network solutions per second |
-| Estimate Network Hash | Estimate total network hash power |
+| Start Mining | Begin mining operations with specified parameters |
+| Stop Mining | Halt mining operations |
+| Set Mining Pool | Configure mining pool connection |
+| Get Hashrate | Retrieve current hashrate statistics |
+| List Workers | Get connected mining workers status |
+| Get Block Template | Retrieve mining block template |
+| Submit Block | Submit solved block to network |
+
+### 6. Network
+
+| Operation | Description |
+|-----------|-------------|
+| Get Network Info | Retrieve network status and statistics |
+| List Peers | Get connected peer information |
+| Add Peer | Connect to specific network peer |
+| Remove Peer | Disconnect from network peer |
+| Get Node Status | Check local node health and sync status |
+| Monitor Consensus | Track network consensus and fork detection |
+| Check Upgrades | Monitor protocol upgrades and activation |
+| Get Network Stats | Retrieve comprehensive network metrics |
 
 ## Usage Examples
 
 ```javascript
-// Shield transparent funds to private z-address
-const shieldOperation = {
-  "fromAddress": "t1YourTransparentAddress123...",
-  "toAddress": "zs1yourshieldedaddress456...",
-  "amount": 5.0,
-  "memo": "Private transaction memo"
-};
+// Send shielded transaction for privacy
+{
+  "operation": "Send Transaction",
+  "fromAddress": "zs1example...",
+  "toAddress": "zs1recipient...",
+  "amount": 0.5,
+  "memo": "Private payment",
+  "includeReplyTo": false
+}
+```
 
-// Send private shielded transaction
-const privateTransaction = {
-  "fromAddress": "zs1sendershieldedaddress789...",
-  "toAddress": "zs1receivershieldedaddress012...",
-  "amount": 2.5,
-  "memo": "Confidential payment",
-  "fee": 0.0001
-};
+```javascript
+// Shield transparent funds for privacy
+{
+  "operation": "Shield Funds",
+  "fromAddress": "t1transparent...",
+  "toShieldedAddress": "zs1shielded...",
+  "amount": 10.0,
+  "memo": "Moving to privacy pool"
+}
+```
 
-// Query shielded balance across all pools
-const balanceQuery = {
-  "address": "zs1yourshieldedaddress345...",
-  "minConfirmations": 1,
-  "includeWatchonly": false
-};
+```javascript
+// Monitor blockchain for new transactions
+{
+  "operation": "List Transactions",
+  "count": 50,
+  "skip": 0,
+  "includeWatchOnly": true,
+  "category": "receive"
+}
+```
 
-// Get transaction details with full disclosure
-const transactionDetails = {
-  "txid": "a1b2c3d4e5f6789012345678901234567890abcdef...",
-  "includeWatchonly": true,
-  "verbose": true
-};
+```javascript
+// Check mining performance
+{
+  "operation": "Get Mining Info",
+  "includeHashrate": true,
+  "includeWorkers": true,
+  "timeframe": "24h"
+}
 ```
 
 ## Error Handling
 
 | Error | Description | Solution |
 |-------|-------------|----------|
-| Insufficient Funds | Not enough ZEC balance for transaction | Check wallet balance and ensure sufficient funds |
-| Invalid Address | Malformed or unsupported address format | Verify address format (t-addr, z-addr, or unified) |
-| Operation Timeout | Shielded operation taking too long | Check operation status and wait for completion |
-| Node Connection Failed | Unable to connect to Zcash node | Verify node URL and authentication credentials |
-| Invalid Private Key | Malformed or incorrect private key | Ensure private key format is valid for address type |
-| Transaction Too Large | Transaction exceeds size limits | Reduce number of inputs/outputs or split transaction |
+| Invalid API Key | Authentication failed with provided credentials | Verify API key and node configuration |
+| Insufficient Funds | Wallet balance too low for transaction | Check wallet balance and reduce amount |
+| Invalid Address | Address format incorrect or unsupported | Validate address format for Zcash network |
+| Node Unreachable | Cannot connect to Zcash node | Check node URL and network connectivity |
+| Transaction Failed | Transaction rejected by network | Verify transaction parameters and fees |
+| Wallet Locked | Wallet requires unlocking for operation | Unlock wallet with correct passphrase |
 
 ## Development
 
@@ -223,5 +247,5 @@ Contributions are welcome! Please ensure:
 ## Support
 
 - **Issues**: [GitHub Issues](https://github.com/Velocity-BPA/n8n-nodes-zcash/issues)
-- **Zcash Documentation**: [Zcash RPC API Reference](https://zcash.github.io/rpc/)
-- **Zcash Community**: [Zcash Community Forum](https://forum.zcashcommunity.com/)
+- **Zcash Documentation**: [Zcash Protocol Documentation](https://zcash.readthedocs.io/)
+- **Community Forum**: [Zcash Community Forum](https://forum.zcashcommunity.com/)
